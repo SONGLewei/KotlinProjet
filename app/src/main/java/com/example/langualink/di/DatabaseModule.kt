@@ -4,7 +4,13 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.langualink.R
 import com.example.langualink.data.local.database.AppDatabase
+import com.example.langualink.data.local.database.MIGRATION_1_2
+import com.example.langualink.data.local.database.MIGRATION_2_3
+import com.example.langualink.data.local.database.MIGRATION_3_4
+import com.example.langualink.data.local.database.MIGRATION_4_5
+import com.example.langualink.model.Badge
 import com.example.langualink.model.Language
 import dagger.Module
 import dagger.Provides
@@ -34,9 +40,12 @@ object DatabaseModule {
                     val database = provideAppDatabase(context)
                     database.languageDao().insertLanguages(getInitialLanguages())
                     database.exerciseDao().insertExercises(getMockExercises())
+                    database.badgeDao().insertBadges(getInitialBadges())
                 }
             }
-        }).build()
+        }).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -72,6 +81,16 @@ object DatabaseModule {
         )
     }
 
+    private fun getInitialBadges(): List<Badge> {
+        return listOf(
+            Badge(1, "First Login", "Awarded for logging in for the first time.", R.drawable.ic_launcher_foreground),
+            Badge(2, "First Lesson Completed", "Awarded for completing the first lesson.", R.drawable.ic_launcher_foreground),
+            Badge(3, "First Chapter Completed", "Awarded for completing the first chapter.", R.drawable.ic_launcher_foreground),
+            Badge(4, "Polyglot in the Making", "Awarded for starting a lesson in a new language.", R.drawable.ic_launcher_foreground),
+            Badge(5, "Quick Learner", "Awarded for finishing a lesson in under a minute.", R.drawable.ic_launcher_foreground)
+        )
+    }
+
     private fun getMockExercises(): List<com.example.langualink.model.Exercise> {
         return listOf(
             // French A1
@@ -87,20 +106,20 @@ object DatabaseModule {
             com.example.langualink.model.Exercise(8, 1, com.example.langualink.model.Level.A2, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Complétez : 'Je vais ___ marché.'", listOf("au", "à la", "aux", "à l'"), "au"),
 
             // French B1
-            com.example.langualink.model.Exercise(10, 1, com.example.langualink.model.Level.B1, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Si j'avais de l'argent, ...", listOf("j'achèterais une voiture", "j'ai acheté une voiture", "j'achète une voiture", "j'achèterai une voiture"), "j'achèterais une voiture"),
-            com.example.langualink.model.Exercise(11, 1, com.example.langualink.model.Level.B1, com.example.langualink.model.ExerciseType.TRANSLATION, "Traduisez : 'I have been living here for 5 years.'", listOf("J'habite ici depuis 5 ans", "J'ai habité ici pendant 5 ans", "J'habiterai ici pour 5 ans", "Je vivais ici depuis 5 ans"), "J'habite ici depuis 5 ans"),
+            com.example.langualink.model.Exercise(9, 1, com.example.langualink.model.Level.B1, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Si j'avais de l'argent, ...", listOf("j'achèterais une voiture", "j'ai acheté une voiture", "j'achète une voiture", "j'achèterai une voiture"), "j'achèterais une voiture"),
+            com.example.langualink.model.Exercise(10, 1, com.example.langualink.model.Level.B1, com.example.langualink.model.ExerciseType.TRANSLATION, "Traduisez : 'I have been living here for 5 years.'", listOf("J'habite ici depuis 5 ans", "J'ai habité ici pendant 5 ans", "J'habiterai ici pour 5 ans", "Je vivais ici depuis 5 ans"), "J'habite ici depuis 5 ans"),
 
             // French B2
-            com.example.langualink.model.Exercise(12, 1, com.example.langualink.model.Level.B2, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Lequel utilise correctement le subjonctif : 'Il faut que ...'", listOf("tu fasses tes devoirs", "tu fais tes devoirs", "tu feras tes devoirs", "tu as fait tes devoirs"), "tu fasses tes devoirs"),
-            com.example.langualink.model.Exercise(13, 1, com.example.langualink.model.Level.B2, com.example.langualink.model.ExerciseType.TRANSLATION, "Traduisez : 'Although it is raining, we will go out.'", listOf("Bien qu'il pleuve, nous sortirons", "Comme il pleut, nous sortirons", "Puisqu'il pleut, nous sortirons", "Même s'il pleut, nous sortirons"), "Bien qu'il pleuve, nous sortirons"),
+            com.example.langualink.model.Exercise(11, 1, com.example.langualink.model.Level.B2, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Lequel utilise correctement le subjonctif : 'Il faut que ...'", listOf("tu fasses tes devoirs", "tu fais tes devoirs", "tu feras tes devoirs", "tu as fait tes devoirs"), "tu fasses tes devoirs"),
+            com.example.langualink.model.Exercise(12, 1, com.example.langualink.model.Level.B2, com.example.langualink.model.ExerciseType.TRANSLATION, "Traduisez : 'Although it is raining, we will go out.'", listOf("Bien qu'il pleuve, nous sortirons", "Comme il pleut, nous sortirons", "Puisqu'il pleut, nous sortirons", "Même s'il pleut, nous sortirons"), "Bien qu'il pleuve, nous sortirons"),
 
             // French C1
-            com.example.langualink.model.Exercise(14, 1, com.example.langualink.model.Level.C1, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Choisissez le synonyme de 'désuet'.", listOf("Obsolète", "Moderne", "Efficace", "Nouveau"), "Obsolète"),
-            com.example.langualink.model.Exercise(15, 1, com.example.langualink.model.Level.C1, com.example.langualink.model.ExerciseType.TRANSLATION, "Traduisez : 'He is said to be the best player.'", listOf("On dit qu'il est le meilleur joueur", "Il a dit être le meilleur joueur", "Il se dit le meilleur joueur", "Il est dit par le meilleur joueur"), "On dit qu'il est le meilleur joueur"),
+            com.example.langualink.model.Exercise(13, 1, com.example.langualink.model.Level.C1, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Choisissez le synonyme de 'désuet'.", listOf("Obsolète", "Moderne", "Efficace", "Nouveau"), "Obsolète"),
+            com.example.langualink.model.Exercise(14, 1, com.example.langualink.model.Level.C1, com.example.langualink.model.ExerciseType.TRANSLATION, "Traduisez : 'He is said to be the best player.'", listOf("On dit qu'il est le meilleur joueur", "Il a dit être le meilleur joueur", "Il se dit le meilleur joueur", "Il est dit par le meilleur joueur"), "On dit qu'il est le meilleur joueur"),
 
             // French C2
-            com.example.langualink.model.Exercise(16, 1, com.example.langualink.model.Level.C2, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Quel est le passé antérieur de 'finir' (avec 'dès que nous...')?", listOf("dès que nous eûmes fini", "dès que nous avions fini", "dès que nous finissions", "dès que nous avons fini"), "dès que nous eûmes fini"),
-            com.example.langualink.model.Exercise(17, 1, com.example.langualink.model.Level.C2, com.example.langualink.model.ExerciseType.TRANSLATION, "Traduisez : 'Had I known, I would have come sooner.'", listOf("Si j'avais su, je serais venu plus tôt", "Si je savais, je viendrais plus tôt", "Sachant, je serais venu plus tôt", "Ayant su, je viendrais plus tôt"), "Si j'avais su, je serais venu plus tôt"),
+            com.example.langualink.model.Exercise(15, 1, com.example.langualink.model.Level.C2, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "Quel est le passé antérieur de 'finir' (avec 'dès que nous...')?", listOf("dès que nous eûmes fini", "dès que nous avions fini", "dès que nous finissions", "dès que nous avons fini"), "dès que nous eûmes fini"),
+            com.example.langualink.model.Exercise(16, 1, com.example.langualink.model.Level.C2, com.example.langualink.model.ExerciseType.TRANSLATION, "Traduisez : 'Had I known, I would have come sooner.'", listOf("Si j'avais su, je serais venu plus tôt", "Si je savais, je viendrais plus tôt", "Sachant, je serais venu plus tôt", "Ayant su, je viendrais plus tôt"), "Si j'avais su, je serais venu plus tôt"),
 
             // Spanish A1
             com.example.langualink.model.Exercise(21, 2, com.example.langualink.model.Level.A1, com.example.langualink.model.ExerciseType.MULTIPLE_CHOICE, "¿Cuál es la capital de España?", listOf("Madrid", "Barcelona", "Lisboa", "Roma"), "Madrid"),
