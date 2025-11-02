@@ -3,8 +3,9 @@ package com.example.langualink.ui.learn
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.langualink.data.local.dao.ExerciseDao
-import com.example.langualink.data.local.dao.UserDao
+import com.example.langualink.data.repository.BadgeRepository
+import com.example.langualink.data.repository.ExerciseRepository
+import com.example.langualink.data.repository.UserRepository
 import com.example.langualink.model.Exercise
 import com.example.langualink.model.Level
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,8 +28,9 @@ data class ExerciseScreenState(
 
 @HiltViewModel
 class ExerciseViewModel @Inject constructor(
-    private val exerciseDao: ExerciseDao,
-    private val userDao: UserDao,
+    private val exerciseRepository: ExerciseRepository,
+    private val userRepository: UserRepository,
+    private val badgeRepository: BadgeRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -51,7 +53,8 @@ class ExerciseViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            exercises = exerciseDao.getExercisesByChapterIdAndLevel(chapterId, level).first()
+            val allExercises = exerciseRepository.getExercisesByChapterId(chapterId).first()
+            exercises = allExercises.filter { it.level == level }
             val exercise = exercises.find { it.id == exerciseId }
             _screenState.value = ExerciseScreenState(exercise = exercise, isLoading = false)
         }
@@ -62,15 +65,21 @@ class ExerciseViewModel @Inject constructor(
         if (exercise != null) {
             val isCorrect = exercise.correctAnswer == option
             _screenState.value = _screenState.value.copy(selectedOption = option, isAnswerCorrect = isCorrect)
-
             if (isCorrect) {
                 viewModelScope.launch {
-                    val user = userDao.getUser().first()
+                    val user = userRepository.getUser().first()
                     if (user != null) {
                         val completedExerciseIds = user.completedExerciseIds.toMutableList()
-                        if (exercise.id !in completedExerciseIds) {
+                        if (!completedExerciseIds.contains(exercise.id)) {
                             completedExerciseIds.add(exercise.id)
-                            userDao.insertOrUpdateUser(user.copy(completedExerciseIds = completedExerciseIds))
+                            userRepository.insertOrUpdateUser(user.copy(completedExerciseIds = completedExerciseIds))
+                            userRepository.addPoints(10) // Add 10 points for completing an exercise
+
+                            if (user.completedExerciseIds.isEmpty()) {
+                                // Award "First Lesson Completed" badge
+                                badgeRepository.awardBadge(user.id, 2)
+                                userRepository.addPoints(20) // Add 20 bonus points for the first lesson
+                            }
                         }
                     }
                 }

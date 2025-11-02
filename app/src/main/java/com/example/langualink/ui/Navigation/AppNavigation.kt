@@ -32,7 +32,9 @@ import com.example.langualink.ui.onboarding.OnboardingStepTwoScreen
 import com.example.langualink.ui.onboarding.OnboardingViewModel
 import com.example.langualink.ui.profile.ProgressionScreen
 import com.example.langualink.ui.SplashScreen
+import com.example.langualink.ui.community.ChatDetailScreen
 import com.example.langualink.ui.learn.ExerciseScreen
+import com.example.langualink.ui.learn.LessonScreen
 
 /**
  * Route definitions for the app
@@ -45,6 +47,9 @@ object AppRoutes {
     const val MAIN_CONTENT = "main_content"
     const val CHAPTER_DETAILS = "chapter_details"
     const val EXERCISE = "exercise/{chapterId}/{level}/{exerciseId}"
+    const val LESSON = "lesson/{title}/{content}"
+
+    const val CHAT_DETAIL = "chat_detail/{chatId}"
 }
 
 /**
@@ -155,7 +160,9 @@ fun MainScreenWithBottomNav() {
         // NavHost for the main content area (Learn, Community, Profile)
         NavHost(navController, startDestination = NavScreen.Learn.route, Modifier.padding(innerPadding)) {
             composable(NavScreen.Learn.route) { LearnScreen(learnViewModel, navController) }
-            composable(NavScreen.Community.route) { CommunityScreen() }
+            composable(NavScreen.Community.route) {
+                CommunityScreen(navController = navController)
+            }
             composable(NavScreen.Profile.route) { ProgressionScreen() }
             composable("${AppRoutes.CHAPTER_DETAILS}/{chapterId}") { backStackEntry ->
                 val chapterId = backStackEntry.arguments?.getString("chapterId")?.toIntOrNull() ?: 0
@@ -163,6 +170,14 @@ fun MainScreenWithBottomNav() {
             }
             composable(AppRoutes.EXERCISE) { backStackEntry ->
                 ExerciseScreen(navController = navController)
+            }
+            composable(AppRoutes.LESSON) { backStackEntry ->
+                val title = backStackEntry.arguments?.getString("title")
+                val content = backStackEntry.arguments?.getString("content")
+                LessonScreen(navController = navController, title = title, content = content)
+            }
+            composable(AppRoutes.CHAT_DETAIL) { backStackEntry ->
+                ChatDetailScreen(navController = navController)
             }
         }
     }
